@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Save-info-Cache</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+<header>
+  <div class="logo">Save-info<span>.</span></div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="openSearch()">&#128269; Buscar</button>
+    <button class="btn btn-primary" onclick="openNewPost()">+ Nova Publicação</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Categorias</div>
+      <div id="cat-list"></div>
+      <div class="add-cat-form" id="add-cat-form">
+        <input type="text" id="new-cat-input" placeholder="Nome da categoria..." maxlength="30" />
+        <button class="btn btn-sm btn-accent" onclick="confirmAddCat()">+</button>
+      </div>
+      <button class="btn btn-outline btn-sm btn-block" onclick="toggleAddCat()">+ Categoria</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Resumo</div>
+      <div class="info-box">
+        <div id="info-posts">0 publicações</div>
+        <div id="info-cats">0 categorias</div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="page-header">
+      <div class="page-title" id="page-title">Todas as Publicações</div>
+      <div class="page-subtitle" id="page-subtitle">Bem-vindo ao Save Cache!
+Aqui você pode salvar suas informações importantes diretamente no navegador, de forma rápida e prática.
+<br>
+<br>
+⚠️ Atenção:
+Evite limpar o cache do navegador, pois todos os dados ficam armazenados nele.
+
+As informações salvas são acessíveis apenas neste dispositivo e navegador.
+
+Se o cache for apagado, todas as suas informações serão perdidas.</div>
+    </div>
+
+    <div class="sort-bar">
+      <span class="sort-label">Ordenar:</span>
+      <button class="sort-btn active" data-sort="recent" onclick="setSort('recent')">Recentes</button>
+      <button class="sort-btn" data-sort="oldest" onclick="setSort('oldest')">Mais antigos</button>
+      <button class="sort-btn" data-sort="alpha"  onclick="setSort('alpha')">A–Z</button>
+    </div>
+
+    <div id="posts-container"></div>
+  </main>
+</div>
+
+<!-- MODAL: Nova / Editar -->
+<div class="overlay" id="new-post-overlay" onclick="closeOnBg(event,'new-post-overlay')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="form-modal-title">Nova Publicação</div>
+      <button class="modal-close" onclick="closeNewPost()">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Título *</label>
+        <input type="text" class="form-input" id="f-title" placeholder="Título da publicação..." />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Conteúdo</label>
+        <textarea class="form-textarea" id="f-body" placeholder="Escreva o conteúdo aqui..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select class="form-select" id="f-cat"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Autor</label>
+        <input type="text" class="form-input" id="f-author" placeholder="Seu nome..." />
+      </div>
+      <div class="form-group">
+        <label class="checkbox-row">
+          <input type="checkbox" id="f-pin" />
+          <span>&#128204; Fixar esta publicação</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mídia (opcional)</label>
+        <div class="media-tabs">
+          <button class="media-tab active" onclick="switchTab('none')">Nenhuma</button>
+          <button class="media-tab" onclick="switchTab('img-url')">Img URL</button>
+          <button class="media-tab" onclick="switchTab('img-upload')">Upload</button>
+          <button class="media-tab" onclick="switchTab('video-url')">Vídeo URL</button>
+          <button class="media-tab" onclick="switchTab('video-embed')">YouTube</button>
+        </div>
+        <div class="media-section active" id="tab-none"></div>
+        <div class="media-section" id="tab-img-url">
+          <input type="url" class="form-input" id="f-img-url" placeholder="https://..." oninput="previewImgUrl()" />
+          <div class="img-preview" id="img-url-preview" style="display:none">
+            <img id="img-url-thumb" src="" alt="preview" />
+          </div>
+        </div>
+        <div class="media-section" id="tab-img-upload">
+          <div class="upload-area" id="upload-area" onclick="document.getElementById('f-img-file').click()">
+            <div class="upload-icon">&#128444;</div>
+            <div>Clique ou arraste uma imagem aqui</div>
+            <div class="upload-hint">PNG, JPG, GIF, WEBP</div>
+          </div>
+          <input type="file" id="f-img-file" accept="image/*" style="display:none" onchange="handleImgUpload()" />
+          <div class="img-preview" id="img-upload-preview" style="display:none;margin-top:8px">
+            <img id="img-upload-thumb" src="" alt="preview" />
+          </div>
+        </div>
+        <div class="media-section" id="tab-video-url">
+          <input type="url" class="form-input" id="f-video-url" placeholder="https://exemplo.com/video.mp4" />
+        </div>
+        <div class="media-section" id="tab-video-embed">
+          <input type="url" class="form-input" id="f-video-embed" placeholder="https://youtube.com/watch?v=..." />
+          <div class="form-hint">Cole o link normal do YouTube ou Vimeo</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeNewPost()">Cancelar</button>
+      <button class="btn btn-accent" onclick="submitPost()">Publicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ver publicação -->
+<div class="overlay" id="view-overlay" onclick="closeOnBg(event,'view-overlay')">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div id="view-cat-tag" class="view-cat-label">—</div>
+      <div class="modal-header-actions">
+        <button class="btn btn-sm btn-outline" onclick="editCurrentPost()">&#9998; Editar</button>
+        <button class="btn btn-sm btn-danger"  onclick="deleteCurrentPost()">&#128465; Excluir</button>
+        <button class="modal-close" onclick="closeView()">&#215;</button>
+      </div>
+    </div>
+    <div id="view-content"></div>
+    <div class="post-view-meta" id="view-meta"></div>
+  </div>
+</div>
+
+<!-- MODAL: Busca -->
+<div class="overlay" id="search-overlay" onclick="closeOnBg(event,'search-overlay')">
+  <div class="modal modal-narrow">
+    <div class="modal-header">
+      <div class="modal-title">Buscar</div>
+      <button class="modal-close" onclick="closeSearch()">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <input type="text" class="form-input" id="search-input" placeholder="Buscar publicações..." oninput="doSearch()" autocomplete="off" />
+      <div id="search-results"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="./script.js"></script>
+</body>
+</html>
